@@ -4,3 +4,7 @@
 *.iws
 out/
 build/
+*.swo
+*.swp
+*.*~
+*.pyc

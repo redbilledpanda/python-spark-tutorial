@@ -1,4 +1,5 @@
-from pyspark import SparkContext
+from pyspark import SparkContext, SparkConf
+import re
 
 if __name__ == "__main__":
 
@@ -13,3 +14,17 @@ if __name__ == "__main__":
 
     Make sure the head lines are removed in the resulting RDD.
     '''
+
+    conf = SparkConf().setAppName("LogMerge").setMaster("local[*]")
+    sc = SparkContext(conf = conf)
+    sc.setLogLevel("ERROR")
+
+    JulyRDD = sc.textFile("in/nasa_19950701.tsv").distinct()
+    header = JulyRDD.first()
+    JulyRDD_noheader = JulyRDD.subtract(sc.parallelize([header]))
+
+    AugRDD = sc.textFile("in/nasa_19950801.tsv").distinct()
+    header = AugRDD.first()
+    combined = AugRDD.subtract(sc.parallelize([header])).union(JulyRDD_noheader)
+
+    SampledRDD = combined.sample(False, 0.1, None).saveAsTextFile("out/sample_nasa_logs1.tsv")
